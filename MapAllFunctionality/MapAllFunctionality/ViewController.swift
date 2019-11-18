@@ -170,6 +170,8 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         case .authorizedWhenInUse:
             print("AuthorizedWhenInUse")
             locationManager?.startUpdatingLocation()
+        @unknown default:
+            break
         }
     }
     
@@ -213,7 +215,7 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         if isGotRoute == false {
             lblX.isHidden = false
             constrPick.constant = 30
-            UIView.animate(withDuration: 0.3, delay: 0.0, options: UIViewAnimationOptions.curveEaseIn, animations: {
+            UIView.animate(withDuration: 0.3, delay: 0.0, options: UIView.AnimationOptions.curveEaseIn, animations: {
                 self.view.layoutIfNeeded()
             }, completion: {(Bool)  in
                 
@@ -227,7 +229,7 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         if isGotRoute == false {
             lblX.isHidden = true
             constrPick.constant = 0
-            UIView.animate(withDuration: 0.3, delay: 0.0, options: UIViewAnimationOptions.curveEaseIn, animations: {
+            UIView.animate(withDuration: 0.3, delay: 0.0, options: UIView.AnimationOptions.curveEaseIn, animations: {
                 self.view.layoutIfNeeded()
             }, completion: {(Bool)  in
                 self.getAddressFromLatAndLong()
@@ -248,8 +250,8 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
             return nil
         }
     
-        let reuseId = String(stringInterpolationSegment: annotation.coordinate.longitude)
-        var pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
+        let reuseId = "\(annotation.coordinate.longitude)"
+        let pinView = mapView.dequeueReusableAnnotationView(withIdentifier: reuseId) as? MKPinAnnotationView
   
         if pinView == nil {
             
@@ -272,14 +274,14 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
              pinView?.annotation = annotation
         }
 
-        let button = UIButton(type: UIButtonType.detailDisclosure)
+        let button = UIButton(type: UIButton.ButtonType.detailDisclosure)
         pinView?.rightCalloutAccessoryView = button
-        button.addTarget(self, action: #selector(ViewController.pinAction), for: UIControlEvents.touchUpInside)
+        button.addTarget(self, action: #selector(ViewController.pinAction), for: UIControl.Event.touchUpInside)
         
         return pinView
     }
     
-    func pinAction(sender: UIButton)  {
+    @objc func pinAction(sender: UIButton)  {
         print("PinAction Fire")
     }
     
@@ -325,7 +327,7 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
     
     //MARK:- Get Direction
     func getDirection() {
-        let directionsRequest : MKDirectionsRequest = MKDirectionsRequest()
+        let directionsRequest : MKDirections.Request = MKDirections.Request()
         
         let pickupCoords : CLLocationCoordinate2D = CLLocationCoordinate2DMake(pickupLocation.coordinate.latitude, pickupLocation.coordinate.longitude)
         
@@ -339,7 +341,7 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
         directionsRequest.destination = destination
     
         let directions : MKDirections = MKDirections.init(request: directionsRequest)
-        self.mapView.remove(self.currentRoute.polyline)
+        self.mapView.removeOverlay(self.currentRoute.polyline)
         
         directions.calculate { response, error in
             if let route = response?.routes.first {
@@ -349,13 +351,13 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
                 var add: Double = 0
                 
                 for steps in self.currentRoute.steps{
-                    let step : MKRouteStep = steps
+                    let step : MKRoute.Step = steps
                     add = add + step.distance;
                 }
                 
                 print("%f",add/1609.344)
                 self.lblDistance.text = "\(add/1609.344) Km"
-                self.mapView.add(self.currentRoute.polyline)
+                self.mapView.addOverlay(self.currentRoute.polyline)
                 
                 self.afterRouteDraw()
                 self.saveToDefault()
@@ -455,7 +457,7 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
 //        span.latitudeDelta *= delta
 //        span.longitudeDelta *= delta
 //        region.span = span
-        region = MKCoordinateRegionMakeWithDistance(Coordinate2D, 1000, 1000)
+        region = MKCoordinateRegion(center: Coordinate2D, latitudinalMeters: 1000, longitudinalMeters: 1000)
         region.center = Coordinate2D
         mapView.centerCoordinate=Coordinate2D;
         mapView.setRegion(region, animated: true)
@@ -495,7 +497,7 @@ class ViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDele
     @IBAction func btnBack(_ sender: Any) {
         btnBack.isHidden = true
         mapView.removeAnnotations([pickupAnnotation,dropAnnotation])
-        self.mapView.remove(self.currentRoute.polyline)
+        self.mapView.removeOverlay(self.currentRoute.polyline)
         
         segment.selectedSegmentIndex = 0
         self.swgmentLocation(segment)
